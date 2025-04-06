@@ -190,10 +190,13 @@ public class TimeObserver implements ObserverFunction{
         ScheduleLog scheduleLog = asyncTaskReturn.getSchedule_log();
         ScheduleData lastData = scheduleLog.getLastData();
         List<ScheduleData> historyDatas = scheduleLog.getHistoryDatas();
+        // 把上一次的调度信息添加到历史调度信息中
         historyDatas.add(lastData);
+        // 如果历史调度信息大于3，则删除最早的调度信息
         if (historyDatas.size() > 3) {
             historyDatas.remove(0);
         }
+        // 创建新的调度信息
         ScheduleData scheduleData = new ScheduleData(UUID.randomUUID() + "", errMsg, costTime + "");
         scheduleLog.setLastData(scheduleData);
         return JSON.toJSONString(scheduleLog);

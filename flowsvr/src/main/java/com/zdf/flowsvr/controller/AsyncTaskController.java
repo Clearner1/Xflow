@@ -22,7 +22,8 @@ public class AsyncTaskController {
 
     @PostMapping("/create_task")
     public ReturnStatus createTask(@RequestBody AsyncTaskRequest asyncTaskGroup) {
-        if (isStrNull(asyncTaskGroup.getTaskData().getTask_type())){
+        // getTask_type类型是否为空字符串
+        if (isStrNull(asyncTaskGroup.getTaskData().getTask_type())) {
             logger.error("input invalid");
             return ErrorStatusReturn.ERR_INPUT_INVALID;
         }
@@ -31,7 +32,7 @@ public class AsyncTaskController {
 
     @GetMapping("/get_task")
     public ReturnStatus getTask(@RequestParam("task_id") String task_id) {
-        if (isStrNull(task_id)){
+        if (isStrNull(task_id)) {
             logger.error("input invalid");
             return ErrorStatusReturn.ERR_INPUT_INVALID;
         }
@@ -39,7 +40,8 @@ public class AsyncTaskController {
     }
 
     @GetMapping("/task_list")
-    public ReturnStatus getTaskList(@RequestParam("task_type") String taskType, @RequestParam("status") int status, @RequestParam("limit") int limit) {
+    public ReturnStatus getTaskList(@RequestParam("task_type") String taskType, @RequestParam("status") int status,
+            @RequestParam("limit") int limit) {
         if (isStrNull(taskType) || !ErrorStatusReturn.IsValidStatus(status)) {
             logger.error("input invalid");
             return ErrorStatusReturn.ERR_INPUT_INVALID;
@@ -48,15 +50,14 @@ public class AsyncTaskController {
     }
 
     @GetMapping("/hold_task")
-    public ReturnStatus holdTask(@RequestParam("task_type") String taskType, @RequestParam("status") int status, @RequestParam("limit") int limit) {
+    public ReturnStatus holdTask(@RequestParam("task_type") String taskType, @RequestParam("status") int status,
+            @RequestParam("limit") int limit) {
         if (isStrNull(taskType) || !ErrorStatusReturn.IsValidStatus(status)) {
             logger.error("input invalid");
             return ErrorStatusReturn.ERR_INPUT_INVALID;
         }
         return asyncTaskService.holdTask(taskType, status, limit);
     }
-
-
 
     @PostMapping("/set_task")
     public ReturnStatus addTask(@RequestBody AsyncTaskSetRequest asyncTaskSetRequest) {
@@ -68,14 +69,13 @@ public class AsyncTaskController {
     }
 
     @GetMapping("/user_task_list")
-    public ReturnStatus getUserTaskList(@RequestParam("user_id") String user_id, @RequestParam("status_list") int statusList) {
+    public ReturnStatus getUserTaskList(@RequestParam("user_id") String user_id,
+            @RequestParam("status_list") int statusList) {
         if (isStrNull(user_id)) {
             logger.error("input invalid");
             return ErrorStatusReturn.ERR_INPUT_INVALID;
         }
         return asyncTaskService.getTaskByUserIdAndStatus(user_id, statusList);
     }
-
-
 
 }

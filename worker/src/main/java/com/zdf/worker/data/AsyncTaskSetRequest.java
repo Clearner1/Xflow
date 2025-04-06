@@ -5,6 +5,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+/**
+ * 更新任务信息请求
+ */
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
@@ -20,7 +23,4 @@ public class AsyncTaskSetRequest {
     private int crt_retry_num; //NOT NULL DEFAULT '0' COMMENT '已经重试几次了',
     private int max_retry_num; //NOT NULL DEFAULT '0' COMMENT '最大能重试几次',
     private int max_retry_interval;
-
-
-
 }

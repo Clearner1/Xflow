@@ -8,17 +8,25 @@ import java.lang.reflect.Method;
 
 public interface AsyncExecutable<T> {
     TaskRet<T> handleProcess();
+
+    TaskRet<T> handleProcess(String message);
+
+    TaskRet<T> handleProcess(String userId, int priority, boolean isUrgent);
+
     TaskRet<T> handleFinish();
+
     TaskRet<T> handleError();
+
     TaskRet<T> contextLoad(String context);
 
-    default AsyncTaskSetStage setStage(Class<?> clazz, String methodName, Object[] params, Class<?>[] parameterTypes, Object... envs) {
+    default AsyncTaskSetStage setStage(Class<?> clazz, String methodName, Object[] params, Class<?>[] parameterTypes,
+            Object... envs) {
         return build(clazz, methodName, params, parameterTypes, envs);
     }
 
-
     // 利用类信息创建任务
-    default AsyncTaskSetStage build(Class<?> clazz, String methodName, Object[] params, Class<?>[] parameterTypes, Object... envs) {
+    default AsyncTaskSetStage build(Class<?> clazz, String methodName, Object[] params, Class<?>[] parameterTypes,
+            Object... envs) {
         TaskBuilder.checkParamsNum(params, parameterTypes);
         Method method = TaskBuilder.getMethod(clazz, methodName, params, parameterTypes);
 

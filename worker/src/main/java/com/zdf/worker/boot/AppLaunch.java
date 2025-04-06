@@ -25,10 +25,10 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class AppLaunch implements Launch{
-    final TaskFlower taskFlower;//用于发送请求
+public class AppLaunch implements Launch {
+    final TaskFlower taskFlower;// 用于发送请求
 
-    public static String packageName; //要执行的类的包名
+    public static String packageName; // 要执行的类的包名
 
     // 拉取哪几类任务
     static Class taskType;
@@ -38,24 +38,24 @@ public class AppLaunch implements Launch{
 
     // 观察者模式的观察管理者
     ObserverManager observerManager;
-    private Long intervalTime;//请求间隔时间，读取用户配置
-    private int scheduleLimit; //一次拉取多少个任务，用户配置
+    private Long intervalTime;// 请求间隔时间，读取用户配置
+    private int scheduleLimit; // 一次拉取多少个任务，用户配置
     public Long cycleScheduleConfigTime = 10000L;// 多长时间拉取一次任务配置信息
     public static int MaxConcurrentRunTimes = 5; // 线程池最大数量
     public static int concurrentRunTimes = MaxConcurrentRunTimes; // 线程并发数
     private static String LOCK_KEY = "lock"; // 分布式锁的键
     Map<String, ScheduleConfig> scheduleCfgDic; // 存储任务配置信息
-    Logger logger = LoggerFactory.getLogger(AppLaunch.class); //打印日志
+    Logger logger = LoggerFactory.getLogger(AppLaunch.class); // 打印日志
     ThreadPoolExecutor threadPoolExecutor; // 拉取任务的线程池
     ScheduledExecutorService loadPool;
-
 
     public AppLaunch() {
         this(0);
     }
+
     public AppLaunch(int scheduleLimit) {
         scheduleCfgDic = new ConcurrentHashMap<>();
-
+        // 
         loadPool = Executors.newScheduledThreadPool(1);
         taskFlower = new TaskFlowerImpl();
         taskType = Lark.class;
@@ -76,25 +76,32 @@ public class AppLaunch implements Launch{
         // 读取对应任务配置信息
         ScheduleConfig scheduleConfig = scheduleCfgDic.get(taskType.getSimpleName());
         // 如果用户没有配置时间间隔就使用默认时间间隔
-        intervalTime = scheduleConfig.getSchedule_interval() == 0 ? TaskConstant.DEFAULT_TIME_INTERVAL * 1000L : scheduleConfig.getSchedule_interval() * 1000L;
-        this.threadPoolExecutor = new ThreadPoolExecutor(concurrentRunTimes, MaxConcurrentRunTimes, intervalTime + 1, TimeUnit.SECONDS, new LinkedBlockingQueue<>(UserConfig.QUEUE_SIZE));
-        for(;;) {
+        intervalTime = scheduleConfig.getSchedule_interval() == 0 ? TaskConstant.DEFAULT_TIME_INTERVAL * 1000L
+                : scheduleConfig.getSchedule_interval() * 1000L;
+        // 初始化线程池 执行任务 核心线程数 最大线程数 线程空闲时间 任务队列大小
+        this.threadPoolExecutor = new ThreadPoolExecutor(concurrentRunTimes, MaxConcurrentRunTimes, intervalTime + 1,
+                TimeUnit.SECONDS, new LinkedBlockingQueue<>(UserConfig.QUEUE_SIZE));
+        for (;;) {
+            // 如果任务队列大小大于等于用户配置的最大任务数，则执行任务
+            // threadPoolExecutor.getQueue().size() - 这是当前等待队列中已有的任务数量
+            // scheduleLimit - 这是每次从任务调度系统批量获取的任务数量
             if (UserConfig.QUEUE_SIZE - threadPoolExecutor.getQueue().size() >= scheduleLimit) {
                 execute(taskType);
             }
             try {
-                Thread.sleep(intervalTime + (int)(Math.random() * 500));
+                Thread.sleep(intervalTime + (int) (Math.random() * 500));
             } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 
         }
-//        for (int i = 0; i < concurrentRunTimes; i++) {
-//            // 前后波动500ms
-//            int step = (int) (Math.random() * 500 + 1);
-//            // 拉取任务
-//            threadPoolExecutor.scheduleAtFixedRate(this::execute, step * 3L, intervalTime + step, TimeUnit.MILLISECONDS);
-//        }
+        // for (int i = 0; i < concurrentRunTimes; i++) {
+        // // 前后波动500ms
+        // int step = (int) (Math.random() * 500 + 1);
+        // // 拉取任务
+        // threadPoolExecutor.scheduleAtFixedRate(this::execute, step * 3L, intervalTime
+        // + step, TimeUnit.MILLISECONDS);
+        // }
     }
 
     public void execute(Class<?> taskType) {
@@ -141,7 +148,8 @@ public class AppLaunch implements Launch{
         try {
             // 利用Java反射执行本地方法
             aClass = getaClass(v.getTask_type());
-            Method method = TaskBuilder.getMethod(aClass, v.getTask_stage(), v.getTask_context().getParams(), v.getTask_context().getClazz());
+            Method method = TaskBuilder.getMethod(aClass, v.getTask_stage(), v.getTask_context().getParams(),
+                    v.getTask_context().getClazz());
             System.out.println(method.getName());
             TaskRet returnVal = (TaskRet) method.invoke(aClass.newInstance(), v.getTask_context().getParams());
             if (returnVal != null) {
@@ -152,7 +160,8 @@ public class AppLaunch implements Launch{
         } catch (Exception e) {
             try {
                 // 执行出现异常了（任务执行失败了）更改任务状态为PENDING，重试次数+1，超过重试次数设置为FAIL
-                observerManager.wakeupObserver(ObserverType.onError, v, scheduleCfgDic.get(v.getTask_type()), asyncTaskBaseList, aClass, e);
+                observerManager.wakeupObserver(ObserverType.onError, v, scheduleCfgDic.get(v.getTask_type()),
+                        asyncTaskBaseList, aClass, e);
                 return;
             } catch (InvocationTargetException | IllegalAccessException ex) {
                 ex.printStackTrace();
@@ -172,35 +181,36 @@ public class AppLaunch implements Launch{
     }
 
     private List<AsyncTaskBase> getAsyncTaskBases(ObserverManager observerManager, Class<?> taskType) {
-// 分布式锁的参数
-        //        LockParam lockParam = new LockParam(LOCK_KEY);
+        // 分布式锁的参数
+        // LockParam lockParam = new LockParam(LOCK_KEY);
         // 分布式锁
-//        RedisLock redisLock = new RedisLock(lockParam);
+        // RedisLock redisLock = new RedisLock(lockParam);
         List<AsyncTaskReturn> taskList = null;
         try {
             // 上锁
-         //   if (redisLock.lock()) {
+            // if (redisLock.lock()) {
             // 调用http请求接口
-                taskList = taskFlower.getTaskList(taskType, TaskStatus.PENDING.getStatus(), scheduleCfgDic.get(taskType.getSimpleName()).getSchedule_limit());
-                if (taskList == null || taskList.size() == 0) {
-                    logger.warn("no task to deal!");
-                    return null;
-                }
-                try {
-                    List<AsyncTaskBase> asyncTaskBaseList = new ArrayList<>();
-                    observerManager.wakeupObserver(ObserverType.onObtain, taskList, asyncTaskBaseList);
-                    return asyncTaskBaseList;
-                } catch (InvocationTargetException | IllegalAccessException e) {
-                    e.printStackTrace();
-                }
-       //     }
+            taskList = taskFlower.getTaskList(taskType, TaskStatus.PENDING.getStatus(),
+                    scheduleCfgDic.get(taskType.getSimpleName()).getSchedule_limit());
+            if (taskList == null || taskList.size() == 0) {
+                logger.warn("no task to deal!");
+                return null;
+            }
+            try {
+                List<AsyncTaskBase> asyncTaskBaseList = new ArrayList<>();
+                observerManager.wakeupObserver(ObserverType.onObtain, taskList, asyncTaskBaseList);
+                return asyncTaskBaseList;
+            } catch (InvocationTargetException | IllegalAccessException e) {
+                e.printStackTrace();
+            }
+            // }
         } catch (Exception e) {
             e.printStackTrace();
         }
-//        finally {
+        // finally {
         // 释放锁
-//            redisLock.unlock();
-//        }
+        // redisLock.unlock();
+        // }
 
         return null;
     }
@@ -213,6 +223,12 @@ public class AppLaunch implements Launch{
         }
     }
 
+    /**
+     * 初始化方法
+     * 1. 加载任务配置信息
+     * 2. 设置线程池核心线程数和最大线程数
+     * 3. 设置任务队列大小
+     */
     @Override
     public int init() {
         loadCfg();
@@ -221,21 +237,20 @@ public class AppLaunch implements Launch{
             concurrentRunTimes = scheduleLimit;
             MaxConcurrentRunTimes = scheduleLimit;
         } else {
+            // 从数据库任务配置表中获取scheduleLimit：一次性拉去多少个任务（比如100个）
             this.scheduleLimit = this.scheduleCfgDic.get(taskType.getSimpleName()).getSchedule_limit();
         }
         // 定期更新任务配置信息
-
-        loadPool.scheduleAtFixedRate(this::loadCfg, cycleScheduleConfigTime, cycleScheduleConfigTime, TimeUnit.MILLISECONDS);
+        loadPool.scheduleAtFixedRate(this::loadCfg, cycleScheduleConfigTime, cycleScheduleConfigTime,
+                TimeUnit.MILLISECONDS);
         return 0;
     }
-
-
-
 
     @Override
     public int destroy() {
         return 0;
     }
+
     // 枚举
     public enum ObserverType {
         onBoot(0),
@@ -243,6 +258,7 @@ public class AppLaunch implements Launch{
         onExecute(2),
         onFinish(3),
         onStop(4), onObtain(5);
+
         private int code;
 
         private ObserverType(int code) {

@@ -9,12 +9,15 @@ import java.lang.reflect.Method;
 // 测试任务
 // 此处可以定义自己的任务
 public class Lark implements AsyncExecutable {
+    // 第一阶段
     public TaskRet printMsg(String msg) {
         System.out.println("The printed msg is: " + msg);
+        // // 设置下一阶段
         AsyncTaskSetStage asyncTaskSetStage = null;
         try {
             Method method = this.getClass().getMethod("printMsg2", String.class);
-            asyncTaskSetStage = setStage(this.getClass(), method.getName(), new Object[]{"我要开花！"}, method.getParameterTypes());
+            asyncTaskSetStage = setStage(this.getClass(), method.getName(), new Object[] { "我要开花！" },
+                    method.getParameterTypes());
         } catch (NoSuchMethodException e) {
             e.printStackTrace();
         }
@@ -32,6 +35,16 @@ public class Lark implements AsyncExecutable {
     }
 
     @Override
+    public TaskRet handleProcess(String message) {
+        return printMsg("处理成功: " + message);
+    }
+
+    @Override
+    public TaskRet handleProcess(String userId, int priority, boolean isUrgent) {
+        return printMsg("处理用户" + userId + "的任务，优先级: " + priority + ", 紧急: " + isUrgent);
+    }
+
+    @Override
     public TaskRet handleFinish() {
         System.out.println("任务后置处理，可以自定义做点任务执行成功后的后置处理，例如回收资源等");
         return new TaskRet("全部任务阶段执行完毕~");
@@ -45,6 +58,7 @@ public class Lark implements AsyncExecutable {
 
     @Override
     public TaskRet contextLoad(String context) {
+        // 加载上下文
         System.out.println("上下文加载，用户可以根据自己定义的协议格式对上下文进行解析");
         NftTaskContext nftTaskContext = JSON.parseObject(context, NftTaskContext.class);
         return new TaskRet<>(nftTaskContext);

@@ -6,7 +6,7 @@ import java.io.Serializable;
 
 /**
  * 
- * @TableName t_schedule_pos
+ * @TableName t_schedule_pos 任务位置表
  */
 @Data
 public class TSchedulePos implements Serializable {
@@ -39,7 +39,5 @@ public class TSchedulePos implements Serializable {
      * 
      */
     private Long modifyTime;
-
-
 
 }

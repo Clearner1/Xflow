@@ -16,6 +16,4 @@ public interface TaskFlower {
     public List<ScheduleConfig> getTaskTypeCfgList();
     public List<AsyncTaskReturn> getUserTaskList(List<TaskStatus> taskStatuses);
     public void createTaskCFG(ScheduleConfig scheduleConfig);
-
-
 }

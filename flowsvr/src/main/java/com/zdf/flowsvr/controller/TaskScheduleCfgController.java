@@ -18,15 +18,25 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaskScheduleCfgController {
     Logger logger = LoggerFactory.getLogger(TaskScheduleCfgController.class);
 
-
     @Autowired
     private ScheduleConfigService scheduleConfigService;
 
+    /**
+     * 获取任务类型配置列表
+     * 
+     * @return 任务类型配置列表
+     */
     @GetMapping("list")
     public ReturnStatus getTaskTypeCfgList() {
         return scheduleConfigService.getTaskTypeCfgList();
     }
 
+    /**
+     * 设置任务配置
+     * 
+     * @param scheduleConfig 任务配置
+     * @return 保存到数据库
+     */
     @GetMapping("task_configuration")
     public ReturnStatus SetTaskCFG(@RequestBody ScheduleConfig scheduleConfig) {
         if (Utils.isStrNull(scheduleConfig.getTask_type())) {
